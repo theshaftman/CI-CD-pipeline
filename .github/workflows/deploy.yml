@@ -1,0 +1,49 @@
+name: Deploy to Ubuntu VM and Kubernetes
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Use an SSH action to run commands on your VM
+      - name: Execute remote SSH commands to deploy
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          command_timeout: 30m
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script_stop: true          # <-- stops on first error
+          script: |
+            # 1. Navigate to the application directory
+            cd /home/ubuntu/.projects/CI-CD-pipeline/ || exit 1
+
+            # 2. Pull the latest changes
+            # Stash any local changes to avoid conflicts
+            # git stash || true 
+            git pull origin main
+
+            # 3. Update the Kubernetes deployment
+            # IMPORTANT: Replace with your actual deployment name and container name.
+            # Option A: If using a versioned image tag (best practice)
+            # git pull updates the manifests, then apply them:
+            docker build -t cd-cd-pipeline-backend:latest .
+            minikube image load cd-cd-pipeline-backend:latest
+            # kubectl apply -f k8s/deployment.yaml
+            
+            # Option B: If using a 'latest' tag, force a rollout restart.
+            # This is often necessary when using the 'latest' tag.
+            kubectl rollout restart deployment/cd-cd-pipeline-backend
+            
+            # 4. (Optional) Verify the rollout
+            kubectl rollout status deployment/cd-cd-pipeline-backend --timeout=90s
+
+            docker system prune -a -f
+            docker builder prune -a -f
