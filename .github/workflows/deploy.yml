@@ -35,15 +35,16 @@ jobs:
             # Option A: If using a versioned image tag (best practice)
             # git pull updates the manifests, then apply them:
             docker build -t cd-cd-pipeline-backend:latest .
+
             minikube image load cd-cd-pipeline-backend:latest
             # kubectl apply -f k8s/deployment.yaml
-            
+
             # Option B: If using a 'latest' tag, force a rollout restart.
             # This is often necessary when using the 'latest' tag.
-            kubectl rollout restart deployment/cd-cd-pipeline-backend
-            
+            minikube kubectl -- rollout restart deployment/cd-cd-pipeline-backend
+
             # 4. (Optional) Verify the rollout
-            kubectl rollout status deployment/cd-cd-pipeline-backend --timeout=90s
+            minikube kubectl -- rollout status deployment/cd-cd-pipeline-backend --timeout=90s
 
             docker system prune -a -f
             docker builder prune -a -f
