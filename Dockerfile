@@ -1,7 +1,7 @@
 FROM python:3.13-slim
 
-RUN mkdir -p ~/.projects/ci_cd_pipeline/app
-WORKDIR ~/.projecs/ci_cd_pipeline/app
+RUN mkdir -p ~/.projects/docker/ci_cd_pipeline/app
+WORKDIR ~/.projecs/docker/ci_cd_pipeline/app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
